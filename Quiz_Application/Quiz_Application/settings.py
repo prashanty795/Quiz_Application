@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'quiz',
     'staff',
     'manager',
+    'import_export',
 ]
 
 MIDDLEWARE = [

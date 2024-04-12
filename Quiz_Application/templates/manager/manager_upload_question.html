@@ -14,7 +14,7 @@
   </style>
 </head>
 <h2 style="text-align:center; color:blue;">UPLOAD QUESTIONS</h2>
-<form method="POST" autocomplete="off" style="margin:100px;margin-top: 0px;">
+<form method="POST" enctype="multipart/form-data" autocomplete="off" style="margin:100px;margin-top: 0px;">
     {%csrf_token%}
     <div class="form-group">
         <label for="question">Course</label>
@@ -22,7 +22,7 @@
         <br>
 
       <label for="file">Select Your File (CSV Format):</label><br>
-      <input class="form-control" type='file' id="file" accept=".csv" required/>
+      <input class="form-control" type='file' name="file" id="file" accept=".csv" required/>
     </div>
     
 
