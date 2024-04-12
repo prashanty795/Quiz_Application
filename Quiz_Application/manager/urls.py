@@ -15,6 +15,7 @@ path('delete-quiz/<int:pk>', views.delete_quiz_view,name='delete-quiz'),
 
 path('manager/manager-question', views.manager_question_view,name='manager-question'),
 path('manager/manager-add-question', views.manager_add_question_view,name='manager-add-question'),
+path('manager/manager-upload-question', views.manager_upload_question_view,name='manager-upload-question'),
 path('manager/manager-view-question', views.manager_view_question_view,name='manager-view-question'),
 path('see-question/<int:pk>', views.see_question_view,name='see-question'),
 path('remove-question/<int:pk>', views.remove_question_view,name='remove-question'),

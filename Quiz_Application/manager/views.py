@@ -106,6 +106,22 @@ def manager_add_question_view(request):
 
 @login_required(login_url='managerlogin')
 @user_passes_test(is_manager)
+def manager_upload_question_view(request):
+    questionForm=QFORM.QuestionForm()
+    if request.method=='POST':
+        questionForm=QFORM.QuestionForm(request.POST)
+        if questionForm.is_valid():
+            question=questionForm.save(commit=False)
+            course=QMODEL.Course.objects.get(id=request.POST.get('courseID'))
+            question.course=course
+            question.save()       
+        else:
+            print("form is invalid")
+        return HttpResponseRedirect('/manager/manager-view-question')
+    return render(request,'manager/manager_upload_question.html',{'questionForm':questionForm})
+
+@login_required(login_url='managerlogin')
+@user_passes_test(is_manager)
 def manager_view_question_view(request):
     courses= QMODEL.Course.objects.all()
     return render(request,'manager/manager_view_question.html',{'courses':courses})
