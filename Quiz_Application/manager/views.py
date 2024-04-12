@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from quiz import models as QMODEL
 from staff import models as SMODEL
 from quiz import forms as QFORM
+import csv
 
 
 #for showing signup/login button for manager
@@ -108,17 +109,28 @@ def manager_add_question_view(request):
 @user_passes_test(is_manager)
 def manager_upload_question_view(request):
     questionForm=QFORM.QuestionForm()
-    if request.method=='POST':
-        questionForm=QFORM.QuestionForm(request.POST)
-        if questionForm.is_valid():
-            question=questionForm.save(commit=False)
-            course=QMODEL.Course.objects.get(id=request.POST.get('courseID'))
-            question.course=course
-            question.save()       
-        else:
+    if request.method == 'POST':
+            course_id = request.POST.get('courseID')
+            print(course_id)
+            csv_file = request.FILES['file']
+            print(csv_file)
+            decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
+            csv_reader = csv.DictReader(decoded_file)
+            csv_data = []
+            for row in csv_reader:
+                csv_data.append(row)
+            return render(request, 'manager/manager_view_upload_question.html', {'csv_data': csv_data, 'course_id': course_id, 'questionForm':questionForm})
+    else:
             print("form is invalid")
-        return HttpResponseRedirect('/manager/manager-view-question')
-    return render(request,'manager/manager_upload_question.html',{'questionForm':questionForm})
+    return render(request, 'manager/manager_upload_question.html',{'questionForm':questionForm})
+
+@login_required(login_url='managerlogin')
+@user_passes_test(is_manager)
+def manager_confirm_upload_question_view(request):
+    questionForm=QFORM.QuestionForm()
+    if request.method == "POST"
+        
+
 
 @login_required(login_url='managerlogin')
 @user_passes_test(is_manager)
