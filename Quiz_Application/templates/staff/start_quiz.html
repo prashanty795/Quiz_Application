@@ -1,85 +1,95 @@
 {% extends 'staff/staffbase.html' %}
 {% block content %}
-{%load static%}
+{% load static %}
 
 <head>
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
   <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-
-
 </head>
 
-
 <div class="jumbotron my-4">
-
-  <form class="form" autocomplete="off" onsubmit="return saveAns()"  action="/staff/calculate-marks" method="POST">
+  <form class="form" autocomplete="off" onsubmit="return saveAns()" action="/staff/calculate-marks" method="POST" id="quiz-form">
     {% csrf_token %}
-    <h1 style="text-align: center;">{{course.course_name}}</h1>
-    {% for q in questions%}
-    <h3 class="text-info">{{ forloop.counter }}. {{q.question}}</h3><h4 style="text-align: right;">[Marks {{q.marks}}]</h4>
+    <h1 style="text-align: center;">{{ course.course_name }}</h1>
+    {% for q in questions %}
+    <div class="question {% if forloop.first %}active{% endif %}">
+      <h3 class="text-info">{{ forloop.counter }}. {{ q.question }}</h3>
+      <h4 style="text-align: right;">[Marks {{ q.marks }}]</h4>
+
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+      <div class="form-check mx-4">
+        <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{ q.option1 }}" value="Option1">
+        <label class="form-check-label" for="option1">
+          {{ q.option1 }}
+        </label>
+      </div>
+
+      <div class="form-check mx-4">
+        <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{ q.option2 }}" value="Option2">
+        <label class="form-check-label" for="option2">
+          {{ q.option2 }}
+        </label>
+      </div>
+
+      <div class="form-check mx-4">
+        <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{ q.option3 }}" value="Option3">
+        <label class="form-check-label" for="option3">
+          {{ q.option3 }}
+        </label>
+      </div>
+
+      <div class="form-check mx-4">
+        <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{ q.option4 }}" value="Option4">
+        <label class="form-check-label" for="option4">
+          {{ q.option4 }}
+        </label>
+      </div>
+    </div>
+    {% endfor %}
+    <button class="btn btn-info btn-lg" id="next-btn">Next</button>
+    <input type="submit" class="btn btn-info btn-lg" value="Submit" id="submit-btn" style="display: none;">
+  </form>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $('.question').not('.active').hide();
     
-        <input type="hidden" name="csrfmiddlewaretoken" value="C24rUotmdHawVQJL3KrqiWxvti8UffOFYUc8TRbZtLt36AVLdP3jbkzUVe3beRAa">
-        
-        
-          <div class="form-check mx-4">
-            <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{q.option1}}" value="Option1">
-            <label class="form-check-label" for="option1">
-              {{q.option1}}
-            </label>
-          </div>
+    $('#next-btn').click(function(e) {
+      e.preventDefault();
+      var current = $('.question.active');
+      var next = current.next('.question');
+      if (next.length) {
+        current.removeClass('active').hide();
+        next.addClass('active').show();
+        if (next.next('.question').length === 0) {
+          $('#next-btn').hide();
+          $('#submit-btn').show();
+        }
+      }
+    });
+  });
 
-        
-          <div class="form-check mx-4">
-            <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{q.option2}}" value="Option2">
-            <label class="form-check-label" for="option2">
-              {{q.option2}}
-            </label>
-          </div>
-
-        
-          <div class="form-check mx-4">
-            <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{q.option3}}" value="Option3">
-            <label class="form-check-label" for="option3">
-              {{q.option3}}
-            </label>
-          </div>
-
-        
-          <div class="form-check mx-4">
-            <input class="form-check-input" type="radio" name="{{ forloop.counter }}" id="{{q.option4}}" value="Option4">
-            <label class="form-check-label" for="option4">
-              {{q.option4}}
-            </label>
-          </div>
-
-        {% endfor %}
-        <input class="btn btn-info btn-lg"   type="submit" value="Submit">  
-    </form>
-  </div>
-
-<script> 
-    function saveAns(){  
-
-        var ele = document.getElementsByTagName('input'); 
-        for(i = 0; i < ele.length; i++) { 
-            if(ele[i].type="radio") { 
-                if(ele[i].checked){        
-                  setCookie(ele[i].name,ele[i].value,3)
-                }
-            } 
-        } 
-          
+  function saveAns() {
+    var ele = document.getElementsByTagName('input');
+    for (i = 0; i < ele.length; i++) {
+      if (ele[i].type = "radio") {
+        if (ele[i].checked) {
+          setCookie(ele[i].name, ele[i].value, 3)
+        }
+      }
     }
-    
-    function setCookie(cname, cvalue, exdays) {
-  var d = new Date();
-  d.setTime(d.getTime() + (exdays*24*60*60*1000));
-  var expires = "expires="+ d.toUTCString();
-  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-}
+  }
 
-</script> 
+  function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  }
+</script>
 
 <br><br><br><br><br><br>
 {% endblock content %}
