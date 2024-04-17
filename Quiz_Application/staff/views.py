@@ -8,6 +8,9 @@ from django.conf import settings
 from datetime import date, timedelta
 from quiz import models as QMODEL
 from manager import models as TMODEL
+from random import shuffle
+from django.utils import timezone
+from django.utils.timezone import datetime
 
 
 #for showing signup/login button for staff
@@ -58,23 +61,31 @@ def staff_quiz_view(request):
 @user_passes_test(is_staff)
 def take_quiz_view(request,pk):
     course=QMODEL.Course.objects.get(id=pk)
-    total_questions=QMODEL.Question.objects.all().filter(course=course).count()
-    questions=QMODEL.Question.objects.all().filter(course=course)
-    total_marks=0
-    for q in questions:
-        total_marks=total_marks + q.marks
+    total_questions=course.question_number
+    total_marks=course.total_marks
+    minutes=course.minutes
     
-    return render(request,'staff/take_quiz.html',{'course':course,'total_questions':total_questions,'total_marks':total_marks})
+    return render(request,'staff/take_quiz.html',{'course':course,'total_questions':total_questions,'total_marks':total_marks,'minutes':minutes})
 
 @login_required(login_url='stafflogin')
 @user_passes_test(is_staff)
-def start_quiz_view(request,pk):
-    course=QMODEL.Course.objects.get(id=pk)
-    questions=QMODEL.Question.objects.all().filter(course=course)
-    if request.method=='POST':
-        pass
-    response= render(request,'staff/start_quiz.html',{'course':course,'questions':questions})
-    response.set_cookie('course_id',course.id)
+def start_quiz_view(request, pk):
+    course = QMODEL.Course.objects.get(id=pk)
+    questions = list(QMODEL.Question.objects.filter(course=course))
+    shuffle(questions) 
+    questions = questions[:course.question_number]
+    
+    # Calculate remaining time
+    quiz_start_time_key = f"quiz_start_time_{course.id}"
+    if quiz_start_time_key not in request.session:
+        request.session[quiz_start_time_key] = timezone.now().isoformat()
+    quiz_start_time = timezone.datetime.fromisoformat(request.session[quiz_start_time_key])
+    total_time = course.minutes
+    elapsed_time = (timezone.now() - quiz_start_time).seconds // 60
+    remaining_time = max(total_time - elapsed_time, 0)
+
+    response = render(request, 'staff/start_quiz.html', {'course': course, 'questions': questions, 'remaining_time': remaining_time})
+    response.set_cookie('course_id', course.id)
     return response
 
 
