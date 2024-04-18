@@ -63,31 +63,46 @@
 </div>
 
 <script>
-  var remainingTime = {{ remaining_time }} * 60; 
+  var remainingTime = {{ remaining_time }} * 60;
+
+  document.addEventListener('keydown', function(event) {
+    if ((event.key === 'F5' || (event.ctrlKey && event.key === 'r')) && remainingTime > 0) {
+      event.preventDefault();
+    }
+  });
+
+  function clearPreviousAnswers() {
+    var ele = document.getElementsByTagName('input');
+    for (i = 0; i < ele.length; i++) {
+      if (ele[i].type == "radio") {
+        ele[i].checked = false;
+        document.cookie = ele[i].name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      }
+    }
+  }
+
+  window.onload = clearPreviousAnswers;
 
   function updateTimer() {
     var hours = Math.floor(remainingTime / 3600);
     var minutes = Math.floor((remainingTime % 3600) / 60);
     var seconds = remainingTime % 60;
-    
+
     var timerDisplay = document.getElementById('timer');
     timerDisplay.textContent = 'Time Remaining: ' + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
     remainingTime--;
     if (remainingTime < 0) {
-      alert('Time is up!');
+      saveAns();
       document.querySelector('form').submit();
     }
   }
 
-  // Update timer every second
   setInterval(updateTimer, 1000);
 
-  // Function to pad single digits with leading zero
   function pad(num) {
     return (num < 10 ? '0' : '') + num;
   }
 
-  // Function to save selected answers to cookies
   function saveAns() {
     var ele = document.getElementsByTagName('input');
     for (i = 0; i < ele.length; i++) {
@@ -99,14 +114,24 @@
     }
   }
 
-  // Function to set cookie
   function setCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
     var expires = "expires=" + d.toUTCString();
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
   }
+
+  window.addEventListener('beforeunload', function (e) {
+  var confirmationMessage = 'Are you sure you want to leave? Your progress will be lost.';
+  (e || window.event).returnValue = confirmationMessage;
+  return confirmationMessage;
+});
+
+
+
+
 </script>
+
 
 
 <br><br><br><br><br><br>

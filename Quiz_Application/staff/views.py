@@ -111,6 +111,12 @@ def calculate_marks_view(request):
         result.staff=staff
         result.save()
 
+        # Delete quiz start time from session
+        quiz_start_time_key = f"quiz_start_time_{course.id}"
+        if quiz_start_time_key in request.session:
+            del request.session[quiz_start_time_key]
+            request.session.save()
+
         return HttpResponseRedirect('view-result')
 
 
