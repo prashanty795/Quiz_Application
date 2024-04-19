@@ -10,6 +10,7 @@ path('staff/staff-dashboard', views.staff_dashboard_view,name='staff-dashboard')
 path('staff/staff-quiz', views.staff_quiz_view,name='staff-quiz'),
 path('take-quiz/<int:pk>', views.take_quiz_view,name='take-quiz'),
 path('start-quiz/<int:pk>', views.start_quiz_view,name='start-quiz'),
+path('check-timer/<int:pk>/', views.check_timer, name='check_timer'),
 
 path('staff/calculate-marks', views.calculate_marks_view,name='calculate-marks'),
 path('staff/view-result', views.view_result_view,name='view-result'),

@@ -5,11 +5,15 @@
 <head>
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
-<!-- Display the timer -->
-<div id="timer" class="text-center"></div>
+<div id="timer" class="text-center">
+  <div class="alert alert-info" role="alert">
+    <strong>Remaining Time:</strong> <span id="remainingTime"></span>
+  </div>
+</div>
+
 
 <div class="jumbotron my-4">
   <form id="quizForm" class="form" autocomplete="off" action="/staff/calculate-marks" method="POST">
@@ -21,8 +25,7 @@
         <h3 class="text-info">{{ forloop.counter }}. {{ q.question }}</h3>
         <h4 style="text-align: right;">[Marks {{ q.marks }}]</h4>
 
-        <input type="hidden" name="csrfmiddlewaretoken"
-          value="C24rUotmdHawVQJL3KrqiWxvti8UffOFYUc8TRbZtLt36AVLdP3jbkzUVe3beRAa">
+        <input type="hidden" name="selected_answer_{{ q.id }}" id="selected_answer_{{ q.id }}" value="">
 
         <div class="form-check mx-4">
           <input class="form-check-input" type="radio" name="answer_{{ forloop.counter }}" id="{{ q.option1 }}"
@@ -58,89 +61,70 @@
 </div>
 
 <script>
-var remainingTime = {{ remaining_time }} * 60;
-var currentQuestion = 1;
-var totalQuestions = {{ questions|length }};
+  $(document).ready(function() {
+    var remainingTime;
+    var currentQuestion = 1;
+    var totalQuestions = {{ questions|length }};
+    var course_id = {{  course.id }};
+    var timerInterval;
+  
+    function formatTime(minutes) {
+      var hours = Math.floor(minutes / 60);
+      var remainingMinutes = minutes % 60;
+  
+      var formattedTime = hours.toString().padStart(2, '0') + ':' +
+                          remainingMinutes.toString().padStart(2, '0');
+  
+      return formattedTime;
+    }
+  
+    function checkTimer() {
+      $.ajax({
+        url: '/check-timer/' + course_id,
+        type: 'GET',
+        success: function(response) {
+          if (response.time_up) {
+            $('#quizForm').submit();
+            clearInterval(timerInterval);
+          } else {
+            remainingTime = response.remaining_time;
+            $('#remainingTime').text(formatTime(remainingTime));
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error(error);
+        }
+      });
+    }
+  
+    timerInterval = setInterval(checkTimer, 1000);
+  
+    function showNextQuestion() {
+    var currentQuestionDiv = $('.question.active');
+    var selectedAnswer = currentQuestionDiv.find('input[type="radio"]:checked').val();
+    var currentQuestionId = currentQuestionDiv.data('qid');
+    
+    // Store selected answer in session
+    $('#selected_answer_' + currentQuestionId).val(selectedAnswer);
 
-function updateTimer() {
-  var hours = Math.floor(remainingTime / 3600);
-  var minutes = Math.floor((remainingTime % 3600) / 60);
-  var seconds = remainingTime % 60;
+    currentQuestionDiv.removeClass('active').addClass('hidden');
 
-  var timerDisplay = document.getElementById('timer');
-  timerDisplay.textContent = 'Time Remaining: ' + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-  remainingTime--;
-
-  if (remainingTime < 0 || currentQuestion > totalQuestions) {
-    document.getElementById('quizForm').submit();
-  }
+    currentQuestion++;
+    if (currentQuestion >= totalQuestions) {
+        var nextQuestionDiv = $('.question[data-qid="' + currentQuestion + '"]');
+        nextQuestionDiv.removeClass('hidden').addClass('active');
+        $('#nextBtn').addClass('hidden');
+        $('#submitBtn').removeClass('hidden');
+    } else {
+        var nextQuestionDiv = $('.question[data-qid="' + currentQuestion + '"]');
+        nextQuestionDiv.removeClass('hidden').addClass('active');
+    }
 }
 
-setInterval(updateTimer, 1000);
-
-function pad(num) {
-  return (num < 10 ? '0' : '') + num;
-}
-
-function saveAns() {
-  var ele = document.querySelector('.question.active').querySelector('input[type=radio]:checked');
-  if (ele) {
-    var questionId = ele.name.split('_')[1];
-    setCookie('q_' + questionId, ele.value, 3);
-  }
-}
-
-function setCookie(cname, cvalue, exdays) {
-  var d = new Date();
-  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-  var expires = "expires=" + d.toUTCString();
-  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-}
-
-function showNextQuestion() {
-  saveAns();
-
-  var currentQuestionDiv = document.querySelector('.question.active');
-  currentQuestionDiv.classList.remove('active');
-  currentQuestionDiv.classList.add('hidden');
-
-  currentQuestion++;
-  if (currentQuestion >= totalQuestions) {
-    var nextQuestionDiv = document.querySelector('.question[data-qid="' + currentQuestion + '"]');
-    nextQuestionDiv.classList.remove('hidden');
-    nextQuestionDiv.classList.add('active');
-
-    document.getElementById('nextBtn').classList.add('hidden');
-    document.getElementById('submitBtn').classList.remove('hidden');
-  } else {
-    var nextQuestionDiv = document.querySelector('.question[data-qid="' + currentQuestion + '"]');
-    nextQuestionDiv.classList.remove('hidden');
-    nextQuestionDiv.classList.add('active');
-  }
-}
-
-document.getElementById('nextBtn').addEventListener('click', showNextQuestion);
-
-window.addEventListener('beforeunload', function (e) {
-  if (!document.getElementById('submitBtn').classList.contains('hidden') || remainingTime <= 0) {
-    return; // Allow submission without confirmation message when submitting or when time is up
-  }
-  var confirmationMessage = 'Are you sure you want to leave? Your progress will be lost.';
-  (e || window.event).returnValue = confirmationMessage;
-  return confirmationMessage;
-});
-
-function clearAnswers() {
-  var questions = document.querySelectorAll('.question');
-  questions.forEach(function(question) {
-    var questionId = question.dataset.qid;
-    document.cookie = 'q_' + questionId + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  
+    $('#nextBtn').click(showNextQuestion);
   });
-}
-
-window.onload = clearAnswers;
-
-</script>
+  </script>
 
 <br><br><br><br><br><br>
 {% endblock content %}
