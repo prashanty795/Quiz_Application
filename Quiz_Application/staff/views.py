@@ -89,21 +89,17 @@ def start_quiz_view(request, pk):
     return response
 
 
-@login_required(login_url='stafflogin')
-@user_passes_test(is_staff)
 def calculate_marks_view(request):
-    if request.COOKIES.get('course_id') is not None:
-        course_id = request.COOKIES.get('course_id')
-        course=QMODEL.Course.objects.get(id=course_id)
+    if 'course_id' in request.COOKIES:
+        course_id = request.COOKIES['course_id']
+        course = QMODEL.Course.objects.get(id=course_id)
         
-        total_marks=0
-        questions=QMODEL.Question.objects.all().filter(course=course)
-        for i in range(len(questions)):
-            
-            selected_ans = request.COOKIES.get(str(i+1))
-            actual_answer = questions[i].answer
-            if selected_ans == actual_answer:
-                total_marks = total_marks + questions[i].marks
+        total_marks = 0
+        questions = QMODEL.Question.objects.filter(course=course)
+        for i, question in enumerate(questions):
+            selected_ans = request.COOKIES.get(f'q_{i+1}')
+            if selected_ans == question.answer:
+                total_marks += question.marks
         staff = models.Staff.objects.get(user_id=request.user.id)
         result = QMODEL.Result()
         result.marks=total_marks
