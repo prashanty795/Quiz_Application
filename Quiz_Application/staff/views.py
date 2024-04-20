@@ -81,27 +81,20 @@ def take_quiz_view(request,pk):
 def start_quiz_view(request, pk):
     course = QMODEL.Course.objects.get(id=pk)
     quiz_start_time_key = f"quiz_start_time_{course.id}"
-    quiz_start_time_key = f"quiz_start_time_{course.id}"
     questions = list(QMODEL.Question.objects.filter(course=course))
-    shuffle(questions)
     shuffle(questions)
     questions = questions[:course.question_number]
     
     if quiz_start_time_key not in request.session:
         
-        
         request.session[quiz_start_time_key] = timezone.now().isoformat()
-        request.session['course_id'] = course.id
-        request.session.save()
-
         request.session['course_id'] = course.id
         request.session.save()
 
     quiz_start_time = timezone.datetime.fromisoformat(request.session[quiz_start_time_key])
     total_time = course.minutes * 60
     elapsed_time = (timezone.now() - quiz_start_time).seconds
-    total_time = course.minutes * 60
-    elapsed_time = (timezone.now() - quiz_start_time).seconds
+    
     remaining_time = max(total_time - elapsed_time, 0)
 
     return render(request, 'staff/start_quiz.html', {'course': course, 'questions': questions, 'remaining_time': remaining_time})
