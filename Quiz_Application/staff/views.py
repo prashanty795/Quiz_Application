@@ -1,5 +1,7 @@
 from django.shortcuts import render,redirect
 from django.template.loader import render_to_string
+from django.shortcuts import render,redirect
+from django.template.loader import render_to_string
 from . import forms,models
 from django.db.models import Sum
 from django.contrib.auth.models import Group
@@ -12,6 +14,9 @@ from manager import models as TMODEL
 from random import shuffle
 from django.utils import timezone
 from django.utils.timezone import datetime
+from django.core.mail import send_mail
+from django.utils.html import strip_tags
+from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.utils.html import strip_tags
 from django.http import JsonResponse
@@ -76,17 +81,25 @@ def take_quiz_view(request,pk):
 def start_quiz_view(request, pk):
     course = QMODEL.Course.objects.get(id=pk)
     quiz_start_time_key = f"quiz_start_time_{course.id}"
+    quiz_start_time_key = f"quiz_start_time_{course.id}"
     questions = list(QMODEL.Question.objects.filter(course=course))
+    shuffle(questions)
     shuffle(questions)
     questions = questions[:course.question_number]
     
     if quiz_start_time_key not in request.session:
         
+        
         request.session[quiz_start_time_key] = timezone.now().isoformat()
         request.session['course_id'] = course.id
         request.session.save()
 
+        request.session['course_id'] = course.id
+        request.session.save()
+
     quiz_start_time = timezone.datetime.fromisoformat(request.session[quiz_start_time_key])
+    total_time = course.minutes * 60
+    elapsed_time = (timezone.now() - quiz_start_time).seconds
     total_time = course.minutes * 60
     elapsed_time = (timezone.now() - quiz_start_time).seconds
     remaining_time = max(total_time - elapsed_time, 0)

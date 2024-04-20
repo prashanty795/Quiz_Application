@@ -6,7 +6,14 @@
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
+<div id="timer" class="text-center">
+  <div class="alert alert-info" role="alert">
+    <strong>Remaining Time:</strong> <span id="remainingTime"></span>
+  </div>
+</div>
 
 <div id="timer" class="text-center">
   <div class="alert alert-info" role="alert">
@@ -25,6 +32,7 @@
         <h3 class="text-info">{{ forloop.counter }}. {{ q.question }}</h3>
         <h4 style="text-align: right;">[Marks {{ q.marks }}]</h4>
 
+        <input type="hidden" name="selected_answer_{{ q.id }}" id="selected_answer_{{ q.id }}" value="">
         <input type="hidden" name="selected_answer_{{ q.id }}" id="selected_answer_{{ q.id }}" value="">
 
         <div class="form-check mx-4">
