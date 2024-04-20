@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,reverse
 from . import forms,models
 from django.db.models import Sum
 from django.contrib.auth.models import Group
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.conf import settings
 from datetime import date, timedelta
@@ -110,29 +110,32 @@ def manager_add_question_view(request):
 def manager_upload_question_view(request):
     questionForm = QFORM.QuestionForm()
     if request.method == 'POST':
-        course_id = request.POST.get('courseID')
-        csv_file = request.FILES['file']
-        decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
-        csv_reader = csv.DictReader(decoded_file)
-        csv_data = []
-        for row in csv_reader:
-            csv_data.append(row)
+        try:
+            course_id = request.POST.get('courseID')
+            csv_file = request.FILES['file']
+            decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
+            csv_reader = csv.DictReader(decoded_file)
+            csv_data = []
+            for row in csv_reader:
+                csv_data.append(row)
 
-        form_data_list = []
-        for row in csv_data:
-            form_data = {
-                'courseID': course_id,
-                'marks': row['marks'],
-                'question': row['question'],
-                'option1': row['option1'],
-                'option2': row['option2'],
-                'option3': row['option3'],
-                'option4': row['option4'],
-                'answer': row['answer'],
-            }
-            form_data_list.append(form_data)
-        form_instances = [QFORM.QuestionForm(data=form_data) for form_data in form_data_list]
-        return render(request, 'manager/manager_view_upload_question.html', {'form_instances': form_instances, 'course_id': course_id})
+            form_data_list = []
+            for row in csv_data:
+                form_data = {
+                    'courseID': course_id,
+                    'marks': row['marks'],
+                    'question': row['question'],
+                    'option1': row['option1'],
+                    'option2': row['option2'],
+                    'option3': row['option3'],
+                    'option4': row['option4'],
+                    'answer': row['answer'],
+                }
+                form_data_list.append(form_data)
+            form_instances = [QFORM.QuestionForm(data=form_data) for form_data in form_data_list]
+            return render(request, 'manager/manager_view_upload_question.html', {'form_instances': form_instances, 'course_id': course_id})
+        except Exception as e:
+            return HttpResponse(f"Error: {e}")
     else:
         print("form is invalid")
     return render(request, 'manager/manager_upload_question.html',{'questionForm': questionForm})

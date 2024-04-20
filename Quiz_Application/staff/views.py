@@ -19,7 +19,7 @@ from django.utils.html import strip_tags
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.utils.html import strip_tags
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 
 #for showing signup/login button for staff
@@ -82,6 +82,10 @@ def start_quiz_view(request, pk):
     course = QMODEL.Course.objects.get(id=pk)
     quiz_start_time_key = f"quiz_start_time_{course.id}"
     questions = list(QMODEL.Question.objects.filter(course=course))
+
+    if not questions:
+        return HttpResponse("No questions available for this quiz.")
+
     shuffle(questions)
     questions = questions[:course.question_number]
     
@@ -94,7 +98,7 @@ def start_quiz_view(request, pk):
     quiz_start_time = timezone.datetime.fromisoformat(request.session[quiz_start_time_key])
     total_time = course.minutes * 60
     elapsed_time = (timezone.now() - quiz_start_time).seconds
-    
+
     remaining_time = max(total_time - elapsed_time, 0)
 
     return render(request, 'staff/start_quiz.html', {'course': course, 'questions': questions, 'remaining_time': remaining_time})
