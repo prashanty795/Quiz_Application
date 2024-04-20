@@ -14,6 +14,9 @@ from manager import forms as TFORM
 from staff import forms as SFORM
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
+from quiz import models as QMODEL
+from quiz import forms as QFORM
+import csv
 
 
 
@@ -237,6 +240,62 @@ def admin_add_question_view(request):
         return HttpResponseRedirect('/admin-view-question')
     return render(request,'quiz/admin_add_question.html',{'questionForm':questionForm})
 
+@login_required(login_url='adminlogin')
+def admin_upload_question_view(request):
+    questionForm = QFORM.QuestionForm()
+    if request.method == 'POST':
+        course_id = request.POST.get('courseID')
+        csv_file = request.FILES['file']
+        decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
+        csv_reader = csv.DictReader(decoded_file)
+        csv_data = []
+        for row in csv_reader:
+            csv_data.append(row)
+
+        form_data_list = []
+        for row in csv_data:
+            form_data = {
+                'courseID': course_id,
+                'marks': row['marks'],
+                'question': row['question'],
+                'option1': row['option1'],
+                'option2': row['option2'],
+                'option3': row['option3'],
+                'option4': row['option4'],
+                'answer': row['answer'],
+            }
+            form_data_list.append(form_data)
+        form_instances = [QFORM.QuestionForm(data=form_data) for form_data in form_data_list]
+        return render(request, 'quiz/quiz_view_upload_question.html', {'form_instances': form_instances, 'course_id': course_id})
+    else:
+        print("form is invalid")
+    return render(request, 'quiz/quiz_upload_question.html',{'questionForm': questionForm})
+
+@login_required(login_url='adminlogin')
+def admin_confirm_upload_question_view(request):
+    if request.method == 'POST':
+        for i in range(len(request.POST.getlist('courseID'))):
+            data = {
+                'courseID': request.POST.getlist('courseID')[i],
+                'marks': request.POST.getlist('marks')[i],
+                'question': request.POST.getlist('question')[i],
+                'option1': request.POST.getlist('option1')[i],
+                'option2': request.POST.getlist('option2')[i],
+                'option3': request.POST.getlist('option3')[i],
+                'option4': request.POST.getlist('option4')[i],
+                'answer': request.POST.getlist('answer')[i],
+            }
+            questionForm = QFORM.QuestionForm(data)
+            if questionForm.is_valid():
+                question = questionForm.save(commit=False)
+                course_id = request.POST.getlist('courseID')[i]
+                course = QMODEL.Course.objects.get(id=course_id)
+                question.course = course
+                question.save()   
+            else:
+                print(questionForm.errors)
+                pass
+        return HttpResponseRedirect('admin-view-question')
 
 @login_required(login_url='adminlogin')
 def admin_view_question_view(request):
@@ -290,7 +349,8 @@ def contactus_view(request):
             email = sub.cleaned_data['Email']
             name=sub.cleaned_data['Name']
             message = sub.cleaned_data['Message']
-            send_mail(str(name)+' || '+str(email),message,settings.EMAIL_HOST_USER, settings.EMAIL_RECEIVING_USER, fail_silently = False)
+            receiving_mail = ['prashanty795@gmail.com',]
+            send_mail(str(name)+' || '+str(email),message,settings.EMAIL_HOST_USER, receiving_mail, fail_silently = False)
             return render(request, 'quiz/contactussuccess.html')
     return render(request, 'quiz/contactus.html', {'form':sub})
 

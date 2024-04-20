@@ -1,0 +1,91 @@
+{% extends 'quiz/adminbase.html' %}
+{% block content %}
+{% load widget_tweaks %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+  <style media="screen">
+    a:link {
+      text-decoration: none;
+    }
+
+    h6 {
+      text-align: center;
+    }
+
+    .row {
+      margin: 100px;
+    }
+
+    .center-btn{
+        text-align: center;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<br><br>
+<div class="container">
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h6 class="panel-title">Confirm Questions</h6>
+    </div>
+    <form method="POST" action="{% url 'admin-confirm-upload-question' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Course</th>
+            <th>Marks</th>
+            <th>Questions</th>
+            <th>Options</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form_instance in form_instances %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ form_instance.courseID|add_class:"form-control"|attr:"required:true" }}</td>
+            <td>{{ form_instance.marks|add_class:"form-control"|attr:"required:true" }}</td>
+            <td>{{ form_instance.question|add_class:"form-control"|attr:"required:true" }}</td>
+            <td>
+                <ul>
+                    <li>{{ form_instance.option1|add_class:"form-control"|attr:"required:true" }}</li>
+                    <li>{{ form_instance.option2|add_class:"form-control"|attr:"required:true" }}</li>
+                    <li>{{ form_instance.option3|add_class:"form-control"|attr:"required:true" }}</li>
+                    <li>{{ form_instance.option4|add_class:"form-control"|attr:"required:true" }}</li>
+                </ul>
+            </td>
+            <td>{{ form_instance.answer|add_class:"form-control"|attr:"required:true" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="center-btn">
+        <button type="submit" class="btn btn-primary">Confirm Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<br><br><br><br><br><br>
+{% endblock content %}

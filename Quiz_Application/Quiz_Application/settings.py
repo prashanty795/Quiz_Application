@@ -144,6 +144,8 @@ STATICFILES_DIRS=[
 STATIC_DIR,
  ]
 
+STATIC_ROOT = 'staticfiles'
+
 LOGIN_REDIRECT_URL='/afterlogin'
 
 # Default primary key field type
