@@ -80,6 +80,13 @@ def take_quiz_view(request,pk):
 @user_passes_test(is_staff)
 def start_quiz_view(request, pk):
     course = QMODEL.Course.objects.get(id=pk)
+
+    # Check if there are any preceding quizzes that need to be completed
+    preceding_quizzes = QMODEL.Course.objects.filter(created_at__lt=course.created_at)
+    for preceding_quiz in preceding_quizzes:
+        if not QMODEL.Result.objects.filter(staff=request.user.staff, quiz=preceding_quiz).exists():
+            return HttpResponse(f"You must complete {preceding_quiz.course_name} before accessing this quiz.")
+
     quiz_start_time_key = f"quiz_start_time_{course.id}"
     questions = list(QMODEL.Question.objects.filter(course=course))
 

@@ -9,7 +9,8 @@ class Course(models.Model):
    question_number = models.PositiveIntegerField()
    total_marks = models.PositiveIntegerField()
    minutes = models.PositiveIntegerField()
-   sequence = models.PositiveIntegerField(default=1)
+   created_at = models.DateTimeField(auto_now_add=True)
+
    def __str__(self):
         return self.course_name
 
